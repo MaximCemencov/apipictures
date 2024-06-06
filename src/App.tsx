@@ -1,26 +1,52 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
 import './App.css';
+import { ImageData } from './interfaces/imageData';
+import Modal from './modal/Modal';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App: React.FC = () => {
+    const [images, setImages] = useState<ImageData[]>([]);
+    const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
+
+    useEffect(() => {
+        fetchImages();
+    }, []);
+
+    const fetchImages = async () => {
+        try {
+            const response = await fetch('http://test-backend.itdelta.agency/api/images');
+            if (!response.ok) {
+                throw new Error('Failed to fetch images');
+            }
+            const data: ImageData[] = await response.json();
+            setImages(data);
+        } catch (error) {
+            console.error('Error fetching images:', error);
+        }
+    };
+
+    const openModal = (imageId: number) => {
+        setSelectedImageId(imageId);
+    };
+
+    const closeModal = () => {
+        setSelectedImageId(null);
+    };
+
+    return (
+        <div className="image-container">
+            {images.map(imageData => (
+                <img
+                    key={imageData.id}
+                    src={imageData.image}
+                    alt="image"
+                    onClick={() => openModal(imageData.id)}
+                />
+            ))}
+            {selectedImageId !== null && (
+                <Modal imageId={selectedImageId} onClose={closeModal} />
+            )}
+        </div>
+    );
+};
 
 export default App;
